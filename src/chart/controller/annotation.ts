@@ -2,7 +2,7 @@ import { contains, deepMix, each, get, isArray, isFunction, isNil, isString, key
 
 import { Annotation as AnnotationComponent, IElement, IGroup, Scale } from '../../dependents';
 import {
-  AnnotationBaseOption as　BaseOption,
+  AnnotationBaseOption as BaseOption,
   AnnotationPosition as Position,
   ArcOption,
   ComponentOption,
@@ -23,7 +23,7 @@ import { COMPONENT_TYPE, DIRECTION, LAYER, VIEW_LIFE_CIRCLE } from '../../consta
 
 import Geometry from '../../geometry/base';
 import Element from '../../geometry/element';
-import { getDistanceToCenter, getPointAngle } from '../../util/coordinate';
+import { getAngleByPoint, getDistanceToCenter } from '../../util/coordinate';
 import { omit } from '../../util/helper';
 import View from '../view';
 import { Controller } from './base';
@@ -84,7 +84,7 @@ export default class Annotation extends Controller<BaseOption[]> {
 
         if (component.get('type') === 'regionFilter') {
           // regionFilter 依赖绘制后的 Geometry Shapes
-          this.view.once(VIEW_LIFE_CIRCLE.AFTER_RENDER, () => {
+          this.view.getRootView().once(VIEW_LIFE_CIRCLE.AFTER_RENDER, () => {
             updateComponentFn(co);
           });
         } else {
@@ -94,7 +94,7 @@ export default class Annotation extends Controller<BaseOption[]> {
     } else {
       each(this.option, (option: BaseOption) => {
         if (option.type === 'regionFilter') {
-          this.view.once(VIEW_LIFE_CIRCLE.AFTER_RENDER, () => {
+          this.view.getRootView().once(VIEW_LIFE_CIRCLE.AFTER_RENDER, () => {
             // regionFilter 依赖绘制后的 Geometry Shapes
             createComponentFn(option);
           });
@@ -187,10 +187,8 @@ export default class Annotation extends Controller<BaseOption[]> {
     super.clear();
 
     this.cache.clear();
-
     this.foregroundContainer.clear();
     this.backgroundContainer.clear();
-
     // clear all option
     if (includeOption) {
       this.option = [];
@@ -528,8 +526,8 @@ export default class Annotation extends Controller<BaseOption[]> {
       const { start, end } = option as ArcOption;
       const sp = this.parsePosition(start);
       const ep = this.parsePosition(end);
-      const startAngle = getPointAngle(coordinate, sp);
-      let endAngle = getPointAngle(coordinate, ep);
+      const startAngle = getAngleByPoint(coordinate, sp);
+      let endAngle = getAngleByPoint(coordinate, ep);
       if (startAngle > endAngle) {
         endAngle = Math.PI * 2 + endAngle;
       }
@@ -620,7 +618,7 @@ export default class Annotation extends Controller<BaseOption[]> {
         end: this.parsePosition(end),
       };
     }
-    // 合并主题，用户配置优先级高于主题
+    // 合并主题，用户配置优先级高于默认主题
     const cfg = deepMix({}, theme, {
       ...o,
       top: option.top,
@@ -630,7 +628,7 @@ export default class Annotation extends Controller<BaseOption[]> {
     });
     cfg.container = this.getComponentContainer(cfg);
     cfg.animate = this.view.getOptions().animate && cfg.animate && get(option, 'animate', cfg.animate); // 如果 view 关闭动画，则不执行
-    cfg.animateOption = deepMix({}, DEFAULT_ANIMATE_CFG, cfg.animateOption);
+    cfg.animateOption = deepMix({}, DEFAULT_ANIMATE_CFG, cfg.animateOption, option.animateOption);
 
     return cfg;
   }

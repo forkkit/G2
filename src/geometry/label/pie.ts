@@ -1,51 +1,26 @@
-import { get, isArray, isObject } from '@antv/util';
-import { getPointAngle } from '../../util/coordinate';
+import { get, isArray } from '@antv/util';
+import { getAngleByPoint } from '../../util/coordinate';
+import { polarToCartesian } from '../../util/graphics';
 import Geometry from '../base';
 import { LabelItem } from './interface';
 import PolarLabel from './polar';
-
-/** label text和line距离 4px */
-const MARGIN = 4;
-
-function getEndPoint(center, angle, r) {
-  return {
-    x: center.x + r * Math.cos(angle),
-    y: center.y + r * Math.sin(angle),
-  };
-}
 
 /**
  * 饼图 label
  */
 export default class PieLabel extends PolarLabel {
+  public defaultLayout = 'distribute';
+
   constructor(geometry: Geometry) {
     super(geometry);
-    this.defaultLabelCfg = get(geometry.theme, 'pieLabels', {});
-  }
-  protected getDefaultOffset(offset) {
-    return offset || 0;
   }
 
-  // 连接线
-  protected lineToLabel(label: LabelItem) {
-    const coordinate = this.coordinate;
-    // @ts-ignore
-    const r = coordinate.getRadius();
-    const distance = label.offset;
-    const angle = label.angle;
-    const center = coordinate.getCenter();
-    // 贴近圆周
-    const start = getEndPoint(center, angle, r);
-    const inner = getEndPoint(center, angle, r + distance / 2);
-    const end = {
-      x: label.x - Math.cos(angle) * MARGIN,
-      y: label.y - Math.sin(angle) * MARGIN,
-    };
-    if (!isObject(label.labelLine)) {
-      // labelLine: true
-      label.labelLine = {};
-    }
-    label.labelLine.path = [`M ${start.x}`, `${start.y} Q${inner.x}`, `${inner.y} ${end.x}`, end.y].join(',');
+  protected getDefaultLabelCfg() {
+    return get(this.geometry.theme, 'pieLabels', {});
+  }
+
+  protected getDefaultOffset(offset) {
+    return offset || 0;
   }
 
   protected getLabelRotate(angle: number, offset: number, isLabelLimit: boolean) {
@@ -63,7 +38,7 @@ export default class PieLabel extends PolarLabel {
   }
 
   protected getLabelAlign(point: LabelItem) {
-    const coordinate = this.coordinate;
+    const coordinate = this.getCoordinate();
     const center = coordinate.getCenter();
 
     let align;
@@ -88,7 +63,7 @@ export default class PieLabel extends PolarLabel {
   }
 
   protected getPointAngle(point) {
-    const coordinate = this.coordinate;
+    const coordinate = this.getCoordinate();
     const startPoint = {
       x: isArray(point.x) ? point.x[0] : point.x,
       y: point.y[0],
@@ -98,11 +73,11 @@ export default class PieLabel extends PolarLabel {
       y: point.y[1],
     };
     let angle;
-    const startAngle = getPointAngle(coordinate, startPoint);
+    const startAngle = getAngleByPoint(coordinate, startPoint);
     if (point.points && point.points[0].y === point.points[1].y) {
       angle = startAngle;
     } else {
-      let endAngle = getPointAngle(coordinate, endPoint);
+      let endAngle = getAngleByPoint(coordinate, endPoint);
       if (startAngle >= endAngle) {
         // 100% pie slice
         endAngle = endAngle + Math.PI * 2;
@@ -112,13 +87,12 @@ export default class PieLabel extends PolarLabel {
     return angle;
   }
 
-  public getCirclePoint(angle, offset, p?) {
-    const coordinate = this.coordinate;
+  protected getCirclePoint(angle, offset, p?) {
+    const coordinate = this.getCoordinate();
     const center = coordinate.getCenter();
-    // @ts-ignore
     const r = coordinate.getRadius() + offset;
     return {
-      ...getEndPoint(center, angle, r),
+      ...polarToCartesian(center.x, center.y, r, angle),
       angle,
       r,
     };

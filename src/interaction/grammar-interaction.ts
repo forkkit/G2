@@ -1,4 +1,4 @@
-import { each, isArray, isFunction, isString } from '@antv/util';
+import { each, isArray, isFunction, isString, debounce, throttle } from '@antv/util';
 import { View } from '../chart';
 import { ActionCallback, IAction, IInteractionContext, LooseObject } from '../interface';
 import { createAction, createCallbackAction } from './action/register';
@@ -70,11 +70,58 @@ export interface InteractionStep {
    * 在一个环节内是否只允许执行一次
    */
   once?: boolean;
+  /**
+   * 是否增加节流
+   */
+  throttle?: ThrottleOption;
+  /**
+   * 是否延迟
+   */
+  debounce?: DebounceOption;
 }
 
-/** 缓存 action 对象 */
+// action 执行时支持 debounce 和 throttle，可以参考：https://css-tricks.com/debouncing-throttling-explained-examples/
+/**
+ * debounce 的配置
+ */
+export interface DebounceOption {
+  /**
+   * 等待时间
+   */
+  wait: number;
+  /**
+   * 是否马上执行
+   */
+  immediate?: boolean;
+}
+
+/**
+ * throttle 的配置
+ */
+export interface ThrottleOption {
+  /**
+   * 等待时间
+   */
+  wait: number;
+  /**
+   * 马上就执行
+   */
+  leading?: boolean;
+  /**
+   * 执行完毕后再执行一次
+   */
+  trailing?: boolean;
+}
+
+/** 缓存 action 对象，仅用于当前文件 */
 interface ActionObject {
+  /**
+   * 缓存的 action
+   */
   action: IAction;
+  /**
+   * action 的方法
+   */
   methodName: string;
 }
 
@@ -266,7 +313,7 @@ export default class GrammarInteraction extends Interaction {
 
   private enterStep(stepName: string) {
     this.currentStepName = stepName;
-    this.emitCaches = {};// 清除所有本环节触发的缓存
+    this.emitCaches = {}; // 清除所有本环节触发的缓存
   }
 
   // 执行完某个触发和反馈（子环节）
@@ -293,19 +340,22 @@ export default class GrammarInteraction extends Interaction {
       const key = this.getKey(stepName, step);
       if (!callbackCaches[key]) {
         // 动态生成执行的方法，执行对应 action 的名称
-        callbackCaches[key] = (event) => {
-          context.event = event;
+        const actionCallback = (event) => {
+          context.event = event; // 保证检测时的 event
           if (this.isAllowExcute(stepName, step)) {
             // 如果是数组时，则依次执行
             if (isArray(actionObject)) {
               each(actionObject, (obj: ActionObject) => {
+                context.event = event; // 可能触发新的事件，保证执行前的 context.event 是正确的
                 executeAction(obj);
               });
             } else {
+              context.event = event; // 保证执行前的 context.event 是正确的
               executeAction(actionObject);
             }
             this.afterExecute(stepName, step);
             if (step.callback) {
+              context.event = event; // 保证执行前的 context.event 是正确的
               step.callback(context);
             }
           } else {
@@ -313,6 +363,19 @@ export default class GrammarInteraction extends Interaction {
             context.event = null;
           }
         };
+        // 如果设置了 debounce
+        if (step.debounce) {
+          callbackCaches[key] = debounce(actionCallback, step.debounce.wait, step.debounce.immediate);
+        } else if (step.throttle) {
+          // 设置 throttle
+          callbackCaches[key] = throttle(actionCallback, step.throttle.wait, {
+            leading: step.throttle.leading,
+            trailing: step.throttle.trailing,
+          });
+        } else {
+          // 直接设置
+          callbackCaches[key] = actionCallback;
+        }
       }
       return callbackCaches[key];
     }

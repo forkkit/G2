@@ -10,15 +10,23 @@ class PathMask extends MaskBase {
   protected getMaskPath() {
     const points = this.points;
     const path = [];
-    each(points, (point, index) => {
-      if (index === 0) {
-        path.push(['M', point.x, point.y]);
-      } else {
-        path.push(['L', point.x, point.y]);
-      }
-    });
-    path.push(['Z']);
+    if (points.length) {
+      each(points, (point, index) => {
+        if (index === 0) {
+          path.push(['M', point.x, point.y]);
+        } else {
+          path.push(['L', point.x, point.y]);
+        }
+      });
+      path.push(['L', points[0].x, points[0].y]);
+    }
     return path;
+  }
+
+  protected getMaskAttrs() {
+    return {
+      path: this.getMaskPath(),
+    };
   }
 
   /**

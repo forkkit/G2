@@ -3,6 +3,8 @@ import { VIEW_LIFE_CIRCLE } from '../../../src/constant';
 import { CITY_SALE } from '../../util/data';
 import { createDiv } from '../../util/dom';
 
+import 'jest-extended';
+
 describe('Chart', () => {
   const div = createDiv();
 
@@ -10,15 +12,16 @@ describe('Chart', () => {
     container: div,
     width: 800,
     height: 600,
-    padding: 10,
+    padding: 5,
+    appendPadding: 5,
     autoFit: false,
     visible: false,
   });
 
   chart.data(CITY_SALE);
   chart.scale({
-    city: {},
-    sale: {},
+    city: { key: true },
+    sale: { key: true },
   });
 
   chart
@@ -83,6 +86,14 @@ describe('Chart', () => {
     expect(chart.visible).toBe(false);
   });
 
+  it('element id', () => {
+    const elementsMap = chart.geometries[0].elementsMap;
+    expect(elementsMap).toContainAllKeys([
+      '杭州-100', '广州-30', '上海-110', '呼和浩特-40',
+      '杭州-40', '广州-90', '上海-200', '呼和浩特-10',
+    ]);
+  });
+
   it('show()', () => {
     chart.show();
     expect(chart.visible).toBe(true);
@@ -117,6 +128,12 @@ describe('Chart', () => {
       width: 700,
       height: 600,
     });
+
+    const elementsMap = chart.geometries[0].elementsMap;
+    expect(elementsMap).toContainAllKeys([
+      '杭州-100', '广州-30', '上海-110', '呼和浩特-40',
+      '杭州-40', '广州-90', '上海-200', '呼和浩特-10',
+    ]);
   });
 
   it('changeVisible', () => {
@@ -137,7 +154,7 @@ describe('Chart', () => {
     // @ts-ignore
     expect(chart.filteredData).toEqual([]);
     // @ts-ignore
-    expect(chart.scalePool.scales).toEqual({});
+    expect(chart.scalePool.scales.size).toBe(0);
     expect(!!chart.getCoordinate()).toBe(false);
 
     // @ts-ignore
@@ -157,6 +174,8 @@ describe('Chart', () => {
     expect(chart.getLayer(LAYER.FORE).destroyed).toBe(true);
     expect(destroyEvent).toBeCalledTimes(1);
 
+    expect(() => { chart.forceFit() }).not.toThrow();
+    expect(chart.destroyed).toBe(true);
     expect(chart.canvas.destroyed).toBe(true);
     expect(div.childNodes.length).toBe(0);
 

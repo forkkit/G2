@@ -2,11 +2,11 @@ import { GeometryCfg } from './geometry/base';
 import { PathCfg } from './geometry/path';
 import { IInteractionContext } from './interface';
 
-// 注册主题
-import { registerStyleSheet, registerTheme } from './core';
+// 注册黑暗主题
+import { registerTheme } from './core';
 import { antvDark } from './theme/style-sheet/dark';
-registerStyleSheet('dark', antvDark);
-registerTheme('dark', 'dark');
+import { createThemeByStylesheet } from './util/theme';
+registerTheme('dark', createThemeByStylesheet(antvDark));
 
 // 注册 G 渲染引擎
 import * as CanvasEngine from '@antv/g-canvas';
@@ -82,10 +82,10 @@ import { limitInShape } from './geometry/label/layout/limit-in-shape';
 import { fixedOverlap, overlap } from './geometry/label/layout/overlap';
 
 registerGeometryLabelLayout('overlap', overlap);
+registerGeometryLabelLayout('distribute', distribute);
 registerGeometryLabelLayout('fixed-overlap', fixedOverlap);
 registerGeometryLabelLayout('limit-in-shape', limitInShape);
 registerGeometryLabelLayout('limit-in-canvas', limitInCanvas);
-registerGeometryLabelLayout('distribute', distribute);
 
 // 注册需要的动画执行函数
 import { fadeIn, fadeOut } from './animate/animation/fade';
@@ -151,6 +151,7 @@ import SiblingTooltip from './interaction/action/component/sibling-tooltp';
 import TooltipAction from './interaction/action/component/tooltip';
 
 import ElmentActive from './interaction/action/element/active';
+import ElementLinkByColor from './interaction/action/element/link-by-color';
 import ElmentRangeActive from './interaction/action/element/range-active';
 import ElmentSingleActive from './interaction/action/element/single-active';
 
@@ -203,12 +204,13 @@ registerAction('element-single-highlight', ElmentSingleHighlight);
 registerAction('element-range-highlight', ElmentRangeHighlight);
 registerAction('element-sibling-highlight', ElmentRangeHighlight, {
   effectSiblings: true,
-  effectByRecord: true
+  effectByRecord: true,
 });
 
 registerAction('element-selected', ElementSelected);
 registerAction('element-single-selected', ElementSingleSelected);
 registerAction('element-range-selected', ElementRangeSelected);
+registerAction('element-link-by-color', ElementLinkByColor);
 
 registerAction('active-region', ActiveRegion);
 registerAction('list-active', ListActive);
@@ -216,9 +218,17 @@ registerAction('list-selected', ListSelected);
 registerAction('list-highlight', ListHighlight);
 registerAction('list-unchecked', ListUnchecked);
 
+registerAction('legend-item-highlight', ListHighlight, {
+  componentNames: ['legend'],
+});
+
+registerAction('axis-label-highlight', ListHighlight, {
+  componentNames: ['axis'],
+});
+
 registerAction('rect-mask', RectMask);
-registerAction('x-rect-mask', DimMask, {dim: 'x'});
-registerAction('y-rect-mask', DimMask, {dim: 'y'});
+registerAction('x-rect-mask', DimMask, { dim: 'x' });
+registerAction('y-rect-mask', DimMask, { dim: 'y' });
 registerAction('circle-mask', CircleMask);
 registerAction('path-mask', PathMask);
 registerAction('smooth-path-mask', SmoothPathMask);
@@ -235,7 +245,7 @@ registerAction('sibling-y-filter', SiblingFilter);
 
 registerAction('element-filter', ElementFilter);
 registerAction('element-sibling-filter', ElementSiblingFilter);
-registerAction('element-sibling-filter-record', ElementSiblingFilter, {byRecord: true});
+registerAction('element-sibling-filter-record', ElementSiblingFilter, { byRecord: true });
 
 registerAction('view-drag', ViewDrag);
 registerAction('view-move', ViewMove);
@@ -256,8 +266,15 @@ function isPointInView(context: IInteractionContext) {
 
 // 注册 tooltip 的 interaction
 registerInteraction('tooltip', {
-  start: [{ trigger: 'plot:mousemove', action: 'tooltip:show' }],
-  end: [{ trigger: 'plot:mouseleave', action: 'tooltip:hide' }],
+  start: [
+    { trigger: 'plot:mousemove', action: 'tooltip:show', throttle: { wait: 50, leading: true, trailing: false } },
+    { trigger: 'plot:touchmove', action: 'tooltip:show', throttle: { wait: 50, leading: true, trailing: false } },
+  ],
+  end: [
+    { trigger: 'plot:mouseleave', action: 'tooltip:hide' },
+    { trigger: 'plot:leave', action: 'tooltip:hide' },
+    { trigger: 'plot:touchend', action: 'tooltip:hide' },
+  ],
 });
 
 // 移动到 elment 上 active
@@ -297,14 +314,18 @@ registerInteraction('legend-active', {
 
 // legend hover，element active
 registerInteraction('legend-highlight', {
-  start: [{ trigger: 'legend-item:mouseenter', action: ['list-highlight:highlight', 'element-highlight:highlight'] }],
-  end: [{ trigger: 'legend-item:mouseleave', action: ['list-highlight:reset', 'element-highlight:reset'] }],
+  start: [
+    { trigger: 'legend-item:mouseenter', action: ['legend-item-highlight:highlight', 'element-highlight:highlight'] },
+  ],
+  end: [{ trigger: 'legend-item:mouseleave', action: ['legend-item-highlight:reset', 'element-highlight:reset'] }],
 });
 
 // legend hover，element active
 registerInteraction('axis-label-highlight', {
-  start: [{ trigger: 'axis-label:mouseenter', action: ['list-highlight:highlight', 'element-highlight:highlight'] }],
-  end: [{ trigger: 'axis-label:mouseleave', action: ['list-highlight:reset', 'element-highlight:reset'] }],
+  start: [
+    { trigger: 'axis-label:mouseenter', action: ['axis-label-highlight:highlight', 'element-highlight:highlight'] },
+  ],
+  end: [{ trigger: 'axis-label:mouseleave', action: ['axis-label-highlight:reset', 'element-highlight:reset'] }],
 });
 
 // legend hover，element active
@@ -324,15 +345,16 @@ registerInteraction('element-range-highlight', {
   start: [
     {
       trigger: 'plot:mousedown',
-      isEnable(context) { // 不要点击在 mask 上重新开始
+      isEnable(context) {
+        // 不要点击在 mask 上重新开始
         return !context.isInShape('mask');
       },
       action: ['rect-mask:start', 'rect-mask:show'],
     },
     {
       trigger: 'mask:dragstart',
-      action: ['rect-mask:moveStart']
-    }
+      action: ['rect-mask:moveStart'],
+    },
   ],
   processing: [
     {
@@ -340,17 +362,17 @@ registerInteraction('element-range-highlight', {
       action: ['rect-mask:resize'],
     },
     {
-      trigger: 'mask:drag',action: ['rect-mask:move']
+      trigger: 'mask:drag',
+      action: ['rect-mask:move'],
     },
     {
-      trigger: 'mask:change', action: ['element-range-highlight:highlight']
-    }
+      trigger: 'mask:change',
+      action: ['element-range-highlight:highlight'],
+    },
   ],
   end: [
-    { trigger: 'plot:mouseup',
-      action: ['rect-mask:end']
-    },
-    { trigger: 'mask:dragend', action: ['rect-mask:moveEnd']},
+    { trigger: 'plot:mouseup', action: ['rect-mask:end'] },
+    { trigger: 'mask:dragend', action: ['rect-mask:moveEnd'] },
     {
       trigger: 'document:mouseup',
       isEnable(context) {
@@ -399,29 +421,28 @@ registerInteraction('brush-visible', {
   start: [
     {
       trigger: 'plot:mousedown',
-      action: ['rect-mask:start', 'rect-mask:show', 'element-range-highlight:start'],
+      action: ['rect-mask:start', 'rect-mask:show'],
     },
   ],
   processing: [
     {
       trigger: 'plot:mousemove',
-      action: ['rect-mask:resize','element-range-highlight:highlight'],
+      action: ['rect-mask:resize'],
     },
-    {trigger: 'mask:end',action: ['element-filter:filter']}
+    { trigger: 'mask:change', action: ['element-range-highlight:highlight'] },
   ],
   end: [
     {
-      trigger: 'mouseup',
-      isEnable: isPointInView,
-      action: ['rect-mask:end', 'rect-mask:hide', 'element-range-highlight:end', 'element-range-highlight:clear'],
+      trigger: 'plot:mouseup',
+      action: ['rect-mask:end', 'rect-mask:hide', 'element-filter:filter', 'element-range-highlight:clear'],
     },
   ],
   rollback: [
     {
       trigger: 'dblclick',
-      action: ['element-filter:clear']
-    }
-  ]
+      action: ['element-filter:clear'],
+    },
+  ],
 });
 
 registerInteraction('brush-x', {
@@ -433,21 +454,21 @@ registerInteraction('brush-x', {
     {
       trigger: 'mousedown',
       isEnable: isPointInView,
-      action: ['brush-x:start', 'rect-mask:start', 'rect-mask:show'],
+      action: ['brush-x:start', 'x-rect-mask:start', 'x-rect-mask:show'],
     },
   ],
   processing: [
     {
       trigger: 'mousemove',
       isEnable: isPointInView,
-      action: ['rect-mask:resize'],
+      action: ['x-rect-mask:resize'],
     },
   ],
   end: [
     {
       trigger: 'mouseup',
       isEnable: isPointInView,
-      action: ['brush-x:filter', 'brush-x:end', 'rect-mask:end', 'rect-mask:hide'],
+      action: ['brush-x:filter', 'brush-x:end', 'x-rect-mask:end', 'x-rect-mask:hide'],
     },
   ],
   rollback: [{ trigger: 'dblclick', action: ['brush-x:reset'] }],
@@ -478,10 +499,7 @@ registerInteraction('legend-filter', {
     { trigger: 'legend-item:mouseenter', action: 'cursor:pointer' },
     { trigger: 'legend-item:mouseleave', action: 'cursor:default' },
   ],
-  start: [
-    { trigger: 'legend-item:click', action: 'list-unchecked:toggle' },
-    { trigger: 'legend-item:click', action: 'data-filter:filter' },
-  ],
+  start: [{ trigger: 'legend-item:click', action: ['list-unchecked:toggle', 'data-filter:filter'] }],
 });
 
 // 筛选数据
@@ -499,10 +517,7 @@ registerInteraction('legend-visible-filter', {
     { trigger: 'legend-item:mouseenter', action: 'cursor:pointer' },
     { trigger: 'legend-item:mouseleave', action: 'cursor:default' },
   ],
-  start: [
-    { trigger: 'legend-item:click', action: 'list-unchecked:toggle' },
-    { trigger: 'legend-item:click', action: 'element-filter:filter' },
-  ],
+  start: [{ trigger: 'legend-item:click', action: ['list-unchecked:toggle', 'element-filter:filter'] }],
 });
 
 // 出现背景框
@@ -517,13 +532,23 @@ function isWheelDown(event) {
 }
 registerInteraction('view-zoom', {
   start: [
-    { trigger: 'plot:mousewheel', isEnable(context) {
-      return isWheelDown(context.event);
-    }, action: 'scale-zoom:zoomOut' },
-    { trigger: 'plot:mousewheel',isEnable(context) {
-      return !isWheelDown(context.event);
-    }, action: 'scale-zoom:zoomIn' }
-  ]
+    {
+      trigger: 'plot:mousewheel',
+      isEnable(context) {
+        return isWheelDown(context.event);
+      },
+      action: 'scale-zoom:zoomOut',
+      throttle: { wait: 100, leading: true, trailing: false },
+    },
+    {
+      trigger: 'plot:mousewheel',
+      isEnable(context) {
+        return !isWheelDown(context.event);
+      },
+      action: 'scale-zoom:zoomIn',
+      throttle: { wait: 100, leading: true, trailing: false },
+    },
+  ],
 });
 
 registerInteraction('sibling-tooltip', {
@@ -598,3 +623,14 @@ declare module './chart/view' {
 }
 
 export * from './core';
+// 一些工具方法导出
+import { getAngle, polarToCartesian } from './util/graphics';
+import { rotate, transform, translate, zoom } from './util/transform';
+export const Util = {
+  translate,
+  rotate,
+  zoom,
+  transform,
+  getAngle,
+  polarToCartesian,
+};

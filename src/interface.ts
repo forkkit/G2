@@ -256,8 +256,8 @@ export interface GeometryLabelCfg {
    * 仅当 geometry 为 interval 时生效，指定当前 label 与当前图形的相对位置。
    */
   position?:
-  | ((data: Datum, mappingData: MappingDatum, index: number) => IntervalGeometryLabelPosition)
-  | IntervalGeometryLabelPosition;
+    | ((data: Datum, mappingData: MappingDatum, index: number) => IntervalGeometryLabelPosition)
+    | IntervalGeometryLabelPosition;
   /** 动画配置。 */
   animate?: AnimateOption | false | null;
 }
@@ -273,8 +273,6 @@ export interface LabelOption {
 
 /** Geometry 下每个 state 的配置结构 */
 export interface StateCfg {
-  /** 动画参数配置，null 表示关闭动画。 */
-  animate?: GAnimateCfg | null;
   /** 状态样式配置。 */
   style?: object | StateStyleCallback;
 }
@@ -289,10 +287,10 @@ export interface StateOption {
   inactive?: StateCfg;
   /** selected 状态配置。 */
   selected?: StateCfg;
-};
+}
 
 /** interval label 的位置 */
-type IntervalGeometryLabelPosition = 'top' | 'bottom' | 'middle' | 'left' | 'right';
+export type IntervalGeometryLabelPosition = 'top' | 'bottom' | 'middle' | 'left' | 'right';
 /** G2 提供的 adjust 类型 */
 export type AdjustType = 'stack' | 'jitter' | 'dodge' | 'symmetric';
 /** geometry.color() 图形属性回调函数定义 */
@@ -308,10 +306,13 @@ export type StyleCallback = (...args) => LooseObject;
 /** geometry.label() 接口回调函数定义 */
 export type LabelCallback = (...args) => GeometryLabelCfg | null | undefined;
 /** geometry label 中 content 属性的回调函数类型定义 */
-export type GeometryLabelContentCallback = (data: Datum, mappingData: MappingDatum, index: number) => string | IShape | IGroup;
+export type GeometryLabelContentCallback = (
+  data: Datum,
+  mappingData: MappingDatum,
+  index: number
+) => string | IShape | IGroup;
 /** state 下 style 回调函数定义 */
 export type StateStyleCallback = (element: Element) => LooseObject;
-
 
 // ============================ Geometry Shape 接口相关的类型定义 ============================
 /** 获取 shape marker 时需要的信息 */
@@ -327,7 +328,71 @@ export interface ShapeMarkerAttrs {
   /** marker 的形状。 */
   symbol: string | ShapeMarkerSymbol;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/g/blob/92e372444f204a07bb034b49dfd35e346fe0d68e/packages/g-base/src/types.ts#L30|ShapeAttrs}，marker 的样式。
+   * marker 的样式，`ShapeAttrs` 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   // x 坐标
+   *   x?: number;
+   *   // y 坐标
+   *   y?: number;
+   *   // 圆半径
+   *   r?: number;
+   *   // 描边颜色
+   *   stroke?: string | null;
+   *   // 描边透明度
+   *   strokeOpacity?: number;
+   *   // 填充颜色
+   *   fill?: string | null;
+   *   // 填充透明度
+   *   fillOpacity?: number;
+   *   // 整体透明度
+   *   opacity?: number;
+   *   // 线宽
+   *   lineWidth?: number;
+   *   // 指定如何绘制每一条线段末端
+   *   lineCap?: 'butt' | 'round' | 'square';
+   *   // 用来设置2个长度不为0的相连部分（线段，圆弧，曲线）如何连接在一起的属性（长度为0的变形部分，其指定的末端和控制点在同一位置，会被忽略）
+   *   lineJoin?: 'bevel' | 'round' | 'miter';
+   *   // 设置线的虚线样式，可以指定一个数组。一组描述交替绘制线段和间距（坐标空间单位）长度的数字。 如果数组元素的数量是奇数，数组的元素会被复制并重复。例如， [5, 15, 25] 会变成 [5, 15, 25, 5, 15, 25]。这个属性取决于浏览器是否支持 setLineDash() 函数。
+   *   lineDash?: number[] | null;
+   *   // Path 路径
+   *   path?: string | object[];
+   *   // 图形坐标点
+   *   points?: object[];
+   *   // 宽度
+   *   width?: number;
+   *   // 高度
+   *   height?: number;
+   *   // 阴影模糊效果程度
+   *   shadowBlur?: number;
+   *   // 阴影颜色
+   *   shadowColor?: string | null;
+   *   // 阴影 x 方向偏移量
+   *   shadowOffsetX?: number;
+   *   // 阴影 y 方向偏移量
+   *   shadowOffsetY?: number;
+   *   // 设置文本内容的当前对齐方式
+   *   textAlign?: 'start' | 'center' | 'end' | 'left' | 'right';
+   *   // 设置在绘制文本时使用的当前文本基线
+   *   textBaseline?: 'top' | 'hanging' | 'middle' | 'alphabetic' | 'ideographic' | 'bottom';
+   *   // 字体样式
+   *   fontStyle?: 'normal' | 'italic' | 'oblique';
+   *   // 文本字体大小
+   *   fontSize?: number;
+   *   // 文本字体
+   *   fontFamily?: string;
+   *   // 文本粗细
+   *   fontWeight?: 'normal' | 'bold' | 'bolder' | 'lighter' | number;
+   *   // 字体变体
+   *   fontVariant?: 'normal' | 'small-caps' | string;
+   *   // 文本行高
+   *   lineHeight?: number;
+   *   [key: string]: any;
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/g/blob/28e3178b616573e0fa6d59694f1aaca2baaa9766/packages/g-base/src/types.ts#L37|ShapeAttrs}
    */
   style: ShapeAttrs;
 }
@@ -342,7 +407,6 @@ export interface ShapePoint {
   readonly y0?: number;
   size?: number;
 }
-
 
 /** 注册 ShapeFactory 需要实现的接口。 */
 export interface RegisterShapeFactory {
@@ -395,15 +459,17 @@ export interface ShapeFactory extends RegisterShapeFactory {
 /** 自定义 Shape marker 的函数 */
 export type ShapeMarkerSymbol = (x: number, y: number, r: number) => PathCommand[];
 
-
 // ============================ Annotation 类型定义 ============================
 /** Annotation position 回调函数 */
-type AnnotationPositionCallback = (
+export type AnnotationPositionCallback = (
   xScales: Scale[] | Record<string, Scale>,
   yScales: Scale[] | Record<string, Scale>
 ) => [number, number];
 /** Annotation 位置相关属性的类型定义 */
-export type AnnotationPosition = [number | string, number | string] | Record<string, number | string> | AnnotationPositionCallback;
+export type AnnotationPosition =
+  | [number | string, number | string]
+  | Record<string, number | string>
+  | AnnotationPositionCallback;
 
 /** Annotation 定义的通用属性，chart.annotation().line({}) */
 export interface AnnotationBaseOption {
@@ -414,6 +480,8 @@ export interface AnnotationBaseOption {
   readonly style?: object;
   /** 是否进行动画 */
   readonly animate?: boolean;
+  /** 动画参数配置，当且仅当 `animate` 属性为 true，即动画开启时生效。 */
+  animateOption?: ComponentAnimateOption;
   /** x 方向的偏移量 */
   readonly offsetX?: number;
   /** y 方向的偏移量 */
@@ -501,7 +569,7 @@ export interface RegionFilterOption extends RegionPositionBaseOption {
 
 // ============================ Chart && View 上的类型定义 ============================
 /** Tooltip 内容框的 css 样式定义 */
-interface TooltipDomStyles {
+export interface TooltipDomStyles {
   'g2-tooltip'?: LooseObject;
   'g2-tooltip-title'?: LooseObject;
   'g2-tooltip-list'?: LooseObject;
@@ -512,7 +580,7 @@ interface TooltipDomStyles {
 }
 
 /** 目前组件动画允许的参数配置 */
-interface ComponentAnimateCfg {
+export interface ComponentAnimateCfg {
   /** 动画执行时间 */
   readonly duration?: number;
   /** 动画缓动函数 */
@@ -521,7 +589,7 @@ interface ComponentAnimateCfg {
   readonly delay?: number;
 }
 /** 组件各个动画类型配置 */
-interface ComponentAnimateOption {
+export interface ComponentAnimateOption {
   /** 初入场动画配置 */
   appear?: ComponentAnimateCfg;
   /** 更新动画配置 */
@@ -556,6 +624,26 @@ export interface ScaleOption extends ScaleConfig {
    * 只对 type: 'time' 的 scale 生效，强制显示最后的日期 tick。
    */
   showLast?: boolean;
+  /**
+   * 用于声明使用数据记录中的哪些字段来组成一条数据的唯一 id（如有多个字段，则使用 '-' 连接）。
+   * 数据 id 用于标识 Element 图形元素，应用于 Geometry 中的图形元素 Element 更新。
+   * 默认 G2 内部会有一套 ID 生成规则，如果不能满足用户需求，用户既可以使用该属性配置 id。
+   * @example
+   *
+   * 下面的例子中，声明了将 'x' 和 'y' 字段的数值来作为每条数据记录的 id，即下面数据两条数据的 id 分别为：'1-23' 和 '2-2'。
+   * ```ts
+   * const data = [
+   *   { x: 1, y: 23, z: 'a' },
+   *   { x: 2, y: 2, z: 'b' },
+   * ];
+   *
+   * chart.scale({
+   *   x: { key: true },
+   *   y: { key: true },
+   * });
+   * ```
+   */
+  key?: boolean;
 }
 
 /** Geometry 动画参数配置。geometry.animate() */
@@ -581,9 +669,9 @@ export interface InteractionOption {
 /** 用于配置项式的 Geometry 创建方式 */
 export interface GeometryOption {
   /** Geometry 的类型。 */
-  type: 'interval' | 'line' | 'path' | 'point' | 'area' | 'polygon' | 'schema' | 'edge' | 'heatmap' | string;
+  type?: 'interval' | 'line' | 'path' | 'point' | 'area' | 'polygon' | 'schema' | 'edge' | 'heatmap' | string;
   /** position 通道映射规则，对应 `geometry.position()`。 */
-  position: string | AttributeOption;
+  position?: string | AttributeOption;
   /** color 通道映射规则，对应 `geometry.color()`。 */
   color?: string | AttributeOption;
   /** shape 通道映射规则，对应 `geometry.shape()`。 */
@@ -665,6 +753,13 @@ export interface ChartCfg {
    */
   readonly padding?: ViewPadding;
   /**
+   * 图表的内边距会在图表的padding的基础上加上appendPadding，使用方式参考 CSS 盒模型。
+   * @example
+   * 1. appendPadding: 20
+   * 2. appendPadding: [ 10, 30, 30 ]
+   */
+  readonly appendPadding?: ViewAppendPadding;
+  /**
    * 是否开启局部刷新，默认开启。
    */
   readonly localRefresh?: boolean;
@@ -712,6 +807,13 @@ export interface ViewCfg {
    * 2. padding: [ 10, 30, 30 ]
    */
   readonly padding?: ViewPadding;
+  /**
+   * 设置图表的内边距在padding的基础上增加appendPading的调整。
+   * @example
+   * 1. padding: 20
+   * 2. padding: [ 10, 30, 30 ]
+   */
+  readonly appendPadding?: ViewAppendPadding;
   /** 设置 view 实例主题。 */
   readonly theme?: LooseObject | string;
   /**
@@ -737,7 +839,7 @@ export interface ComponentOption {
 }
 
 /** Legend marker 的配置结构 */
-interface MarkerCfg extends LegendMarkerCfg {
+export interface MarkerCfg extends LegendMarkerCfg {
   /** 配置图例 marker 的 symbol 形状。 */
   symbol?: Marker | MarkerCallback;
 }
@@ -756,6 +858,11 @@ export interface LegendItem {
   marker?: MarkerCfg;
 }
 
+export interface G2LegendTitleCfg extends LegendTitleCfg {
+  /** title 文本显示内容 */
+  text?: string;
+}
+
 /**
  * 图例项配置
  */
@@ -769,27 +876,49 @@ export interface LegendCfg {
    */
   layout?: 'horizontal' | 'vertical';
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L639|LegendTitleCfg}，图例标题配置，默认不展示。
+   * 图例标题配置，默认不展示。
+   *
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   spacing?: number;    // 标题同图例项的间距
+   *   style?: ShapeAttrs;  // 文本样式配置项
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L639|LegendTitleCfg}，
    */
-  title?: LegendTitleCfg;
+  title?: G2LegendTitleCfg;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L652|LegendBackgroundCfg}，背景框配置项。
+   * 背景框配置项。
+   *
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   padding?: number | number[]; // 背景的留白
+   *   style?: ShapeAttrs;          // 背景样式配置项
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L652|LegendBackgroundCfg}
    */
   background?: LegendBackgroundCfg;
   /** 图例的位置。 */
   position?:
-  | 'top'
-  | 'top-left'
-  | 'top-right'
-  | 'right'
-  | 'right-top'
-  | 'right-bottom'
-  | 'left'
-  | 'left-top'
-  | 'left-bottom'
-  | 'bottom'
-  | 'bottom-left'
-  | 'bottom-right';
+    | 'top'
+    | 'top-left'
+    | 'top-right'
+    | 'right'
+    | 'right-top'
+    | 'right-bottom'
+    | 'left'
+    | 'left-top'
+    | 'left-bottom'
+    | 'bottom'
+    | 'bottom-left'
+    | 'bottom-right';
   /** 动画开关，默认关闭。 */
   animate?: boolean;
   /** 动画参数配置，当且仅当 `animate` 属性为 true，即动画开启时生效。 */
@@ -807,11 +936,33 @@ export interface LegendCfg {
    */
   itemHeight?: number;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L665|LegendItemNameCfg}，**分类图例适用**，图例项 name 文本的配置。
+   * **分类图例适用**，图例项 name 文本的配置。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   spacing?: number; // 图例项 name 同后面 value 的间距
+   *   formatter?: (text: string, item: ListItem, index: number) => any; // 格式化文本函数
+   *   style?: ShapeAttrs; // 文本配置项
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L665|LegendItemNameCfg}，
    */
   itemName?: LegendItemNameCfg;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L685|LegendItemValueCfg}，**分类图例适用**，图例项 value 附加值的配置项。
+   * **分类图例适用**，图例项 value 附加值的配置项。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   alignRight?: boolean; // 是否右对齐，默认为 false，仅当设置图例项宽度时生效
+   *   formatter?: (text: string, item: ListItem, index: number) => any; // 格式化文本函数
+   *   style?: ShapeAttrs; // 图例项附加值的配置
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L685|LegendItemValueCfg}，
    */
   itemValue?: LegendItemValueCfg;
   /**
@@ -852,19 +1003,65 @@ export interface LegendCfg {
    */
   value?: number[];
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L574|ContinueLegendTrackCfg}，**连续图例适用**，选择范围的色块样式配置项。
+   * **连续图例适用**，选择范围的色块样式配置项。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   style?: ShapeAttrs; // 选定范围的样式
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L574|ContinueLegendTrackCfg}
    */
   track?: ContinueLegendTrackCfg;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L595|ContinueLegendRailCfg}，**连续图例适用**，图例滑轨（背景）的样式配置项。
+   * **连续图例适用**，图例滑轨（背景）的样式配置项。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   type?: string; // rail 的类型，color, size
+   *   size?: number; // 滑轨的宽度
+   *   defaultLength?: number; // 滑轨的默认长度，，当限制了 maxWidth,maxHeight 时，不会使用这个属性会自动计算长度
+   *   style?: ShapeAttrs; // 滑轨的样式
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L595|ContinueLegendRailCfg}，
    */
   rail?: ContinueLegendRailCfg;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L618|ContinueLegendLabelCfg}，**连续图例适用**，文本的配置项。
+   * **连续图例适用**，文本的配置项。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   // 文本同滑轨的对齐方式，有五种类型
+   *   // rail ： 同滑轨对齐，在滑轨的两端
+   *   // top, bottom: 图例水平布局时有效
+   *   // left, right: 图例垂直布局时有效
+   *   align?: string;
+   *   spacing?: number; // 文本同滑轨的距离
+   *   style?: ShapeAttrs; // 文本样式
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L618|ContinueLegendLabelCfg}
    */
   label?: ContinueLegendLabelCfg;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L582|ContinueLegendTrackCfg}，**连续图例适用**，滑块的配置项。
+   * **连续图例适用**，滑块的配置项。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   size?: number; // 滑块的大小
+   *   style?: ShapeAttrs; // 滑块的样式设置
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L582|ContinueLegendTrackCfg}，
    */
   handler?: ContinueLegendHandlerCfg;
   /**
@@ -878,9 +1075,9 @@ export interface LegendCfg {
 }
 
 /**
- * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L1154|CrosshairTextCfg}，Tooltip Crosshairs 的文本数据结构
+ * Tooltip Crosshairs 的文本数据结构。
  */
-interface TooltipCrosshairsText extends CrosshairTextCfg {
+export interface TooltipCrosshairsText extends CrosshairTextCfg {
   /** crosshairs 文本内容 */
   content?: string;
 }
@@ -893,7 +1090,12 @@ interface TooltipCrosshairsText extends CrosshairTextCfg {
  * @param currentPoint 对应当前坐标点
  * @returns 返回当前 crosshairs 对应的辅助线文本配置
  */
-type TooltipCrosshairsTextCallback = (type: string, defaultContent: any, items: any[], currentPoint: Point) => TooltipCrosshairsText;
+export type TooltipCrosshairsTextCallback = (
+  type: string,
+  defaultContent: any,
+  items: any[],
+  currentPoint: Point
+) => TooltipCrosshairsText;
 /** Tooltip crosshairs 配置结构 */
 export interface TooltipCrosshairs {
   /**
@@ -907,7 +1109,16 @@ export interface TooltipCrosshairs {
    */
   type?: 'x' | 'y' | 'xy';
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L1177|CrosshairLineCfg}，辅助线的样式配置。
+   * 辅助线的样式配置。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   style?: ShapeAttrs; // 线的样式配置
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L1177|CrosshairLineCfg}
    */
   line?: CrosshairLineCfg;
   /**
@@ -915,7 +1126,17 @@ export interface TooltipCrosshairs {
    */
   text?: TooltipCrosshairsText | TooltipCrosshairsTextCallback;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L1185|CrosshairTextBackgroundCfg}，辅助线文本背景配置。
+   * 辅助线文本背景配置。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   padding?: number | number[]; // 文本背景周围的留白
+   *   style?: ShapeAttrs; // 文本背景的样式
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L1185|CrosshairTextBackgroundCfg}
    */
   textBackground?: CrosshairTextBackgroundCfg;
   /** 辅助线是否跟随鼠标移动，默认为 false，即定位到数据点 */
@@ -924,7 +1145,10 @@ export interface TooltipCrosshairs {
 
 /** chart.tooltip() 接口配置属性 */
 export interface TooltipCfg {
-  /** 设置 tooltip 内容框是否跟随鼠标移动，默认为 true，跟随鼠标移动 */
+  /**
+   * 设置 tooltip 内容框是否跟随鼠标移动。
+   * 默认为 true，跟随鼠标移动，false 则固定位置不随鼠标移动。
+   */
   follow?: boolean;
   /** tooltip 是否允许鼠标滑入，默认为 false，不允许 */
   enterable?: boolean;
@@ -999,7 +1223,17 @@ export interface CoordinateCfg {
 /** 坐标轴网格线的配置属性 */
 export interface AxisGridCfg {
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L407|GridLineCfg}，线的样式。
+   * 线的样式。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   type?: string; // 栅格线的类型，'line' 或者 'circle'
+   *   style?: ShapeAttrs; // 栅格线的样式配置项
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L407|GridLineCfg}
    */
   line?: GridLineCfg;
   /**
@@ -1024,23 +1258,87 @@ export interface AxisCfg {
    */
   position?: 'top' | 'bottom' | 'right' | 'left';
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L91|AxisLineCfg}，坐标轴线的配置项，null 表示不展示。
+   * 坐标轴线的配置项，null 表示不展示。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   style?: ShapeAttrs; // 坐标轴线的样式配置项
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L91|AxisLineCfg}
    */
   line?: AxisLineCfg | null;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L103|AxisTickLineCfg}，坐标轴刻度线线的配置项，null 表示不展示。
+   * 坐标轴刻度线线的配置项，null 表示不展示。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   style?: ShapeAttrs; // 坐标轴刻度线的样式配置项
+   *   alignTick?: boolean; // 是否同 tick 对齐
+   *   length?: number;  // 长度
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L103|AxisTickLineCfg}
    */
   tickLine?: AxisTickLineCfg | null;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L169|AxisSubTickLineCfg}，坐标轴子刻度线的配置项，null 表示不展示。
+   * 坐标轴子刻度线的配置项，null 表示不展示。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   style?: ShapeAttrs; // 坐标轴刻度线的样式配置项
+   *   count?: number; // 子刻度个数
+   *   length?: number; // 子刻度线长度
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L169|AxisSubTickLineCfg}
    */
   subTickLine?: AxisSubTickLineCfg | null;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L191|AxisTitleCfg}，标题的配置项，null 表示不展示。
+   * 标题的配置项，null 表示不展示。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   offset?: number; // 标题距离坐标轴的距离
+   *   style?: ShapeAttrs; // 标题文本配置项
+   *   autoRotate?: boolean; // 是否自动旋转
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L191|AxisTitleCfg}
    */
   title?: AxisTitleCfg | null;
   /**
-   * 配置属性详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L127|AxisLabelCfg}，文本标签的配置项，null 表示不展示。
+   * 文本标签的配置项，null 表示不展示。
+   * 属性结构如下：
+   *
+   * ```ts
+   * {
+   *   // 坐标轴文本的样式
+   *   style?: ShapeAttrs;
+   *   // label 的偏移量
+   *   offset?: number;
+   *   // 文本旋转角度
+   *   rotate?: number;
+   *   // 格式化函数
+   *   formatter?: (text: string, item: ListItem, index: number) => any;
+   *   // 是否自动旋转，默认 true
+   *   autoRotate?: boolean | (isVertical: boolean, labelGroup: IGroup, limitLength?: number) => boolean; | string;
+   *   // 是否自动隐藏，默认 false
+   *   autoHide?: boolean | (isVertical: boolean, labelGroup: IGroup, limitLength?: number) => boolean; | string;
+   *   // 是否自动省略，默认 false
+   *   autoEllipsis?: boolean | (isVertical: boolean, labelGroup: IGroup, limitLength?: number) => boolean; | string;
+   * }
+   * ```
+   *
+   * 详见 {@link https://github.com/antvis/component/blob/81890719a431b3f9088e0c31c4d5d382ef0089df/src/types.ts#L127|AxisLabelCfg}
    */
   label?: AxisLabelCfg | null;
   /** 坐标轴网格线的配置项，null 表示不展示。 */
@@ -1056,7 +1354,7 @@ export interface AxisCfg {
 /** 配置项声明式 */
 export interface Options {
   /** 数据源配置。 */
-  readonly data: Data;
+  readonly data?: Data;
   /** 设置数据过滤条件，以 data 中的数据属性为 key。 */
   readonly filters?: Record<string, FilterCondition>;
   /** 坐标轴配置，以 data 中的数据属性为 key。 */
@@ -1070,15 +1368,16 @@ export interface Options {
   /** 坐标系配置。 */
   readonly coordinate?: CoordinateOption;
   /** 静态辅助元素声明。 */
-  readonly annotations?: Array<
-    ArcOption |
-    RegionFilterOption |
-    ImageOption |
-    LineOption |
-    TextOption |
-    RegionOption |
-    DataMarkerOption |
-    DataRegionOption>;
+  readonly annotations?: (
+    | ArcOption
+    | RegionFilterOption
+    | ImageOption
+    | LineOption
+    | TextOption
+    | RegionOption
+    | DataMarkerOption
+    | DataRegionOption
+  )[];
   /** Geometry 配置 */
   readonly geometries?: GeometryOption[];
   /** 开启/关闭动画，默认开启 */
@@ -1094,7 +1393,7 @@ export interface Options {
 }
 
 /** 支持的 Marker 类型 */
-type Marker =
+export type Marker =
   | 'circle'
   | 'square'
   | 'diamond'
@@ -1108,7 +1407,7 @@ type Marker =
   | 'hyphen'
   | 'line';
 /** 自定义 Marker 的回调函数定义 */
-type MarkerCallback = (x: number, y: number, r: number) => PathCommand;
+export type MarkerCallback = (x: number, y: number, r: number) => PathCommand;
 /** chart.tooltip() 参数类型 */
 export type TooltipOption = TooltipCfg | boolean;
 /* 筛选器函数类型定义 */
@@ -1119,21 +1418,21 @@ export type AxisOption = AxisCfg | boolean;
 export type LegendOption = LegendCfg | boolean;
 /** G2 支持的度量类型 */
 export type ScaleType =
-  'linear' |
-  'cat' |
-  'category' |
-  'identity' |
-  'log' |
-  'pow' |
-  'time' |
-  'timeCat' |
-  'quantize' |
-  'quantile';
+  | 'linear'
+  | 'cat'
+  | 'category'
+  | 'identity'
+  | 'log'
+  | 'pow'
+  | 'time'
+  | 'timeCat'
+  | 'quantize'
+  | 'quantile';
 
-type CoordinateRotate = ['rotate', number];
-type CoordinateReflect = ['reflect', 'x' | 'y'];
-type CoordinateScale = ['scale', number, number];
-type CoordinateTranspose = ['transpose'];
+export type CoordinateRotate = ['rotate', number];
+export type CoordinateReflect = ['reflect', 'x' | 'y'];
+export type CoordinateScale = ['scale', number, number];
+export type CoordinateTranspose = ['transpose'];
 /** 坐标系支持的 action 配置 */
 export type CoordinateActions = CoordinateRotate | CoordinateReflect | CoordinateScale | CoordinateTranspose;
 
@@ -1215,14 +1514,12 @@ export interface FacetData {
 /** rect 分面类型配置 */
 export interface RectCfg extends FacetCfg<RectData> {
   /** 行标题的样式。 */
-  readonly columnTitle?: FacetTitle,
+  readonly columnTitle?: FacetTitle;
   /** 列标题的样式。 */
-  readonly rowTitle?: FacetTitle,
+  readonly rowTitle?: FacetTitle;
 }
 
-export interface RectData extends FacetData {
-
-}
+export interface RectData extends FacetData {}
 
 // ===================== mirror 相关类型定义 =====================
 /** mirror 分面类型配置 */
@@ -1233,8 +1530,7 @@ export interface MirrorCfg extends FacetCfg<MirrorData> {
   readonly title?: FacetTitle;
 }
 
-export interface MirrorData extends FacetData {
-}
+export interface MirrorData extends FacetData {}
 
 // ===================== list 相关类型定义 =====================
 /** list 分面类型配置 */
@@ -1253,13 +1549,12 @@ export interface ListData extends FacetData {
 /** matrix 分面类型配置 */
 export interface MatrixCfg extends FacetCfg<MirrorData> {
   /** 列标题的样式 */
-  readonly columnTitle?: FacetTitle,
+  readonly columnTitle?: FacetTitle;
   /** 列标题的样式 */
-  readonly rowTitle?: FacetTitle,
+  readonly rowTitle?: FacetTitle;
 }
 
-export interface MatrixData extends FacetData {
-}
+export interface MatrixData extends FacetData {}
 
 // ===================== circle 相关类型定义 =====================
 /** circle 分面类型配置 */
@@ -1268,13 +1563,12 @@ export interface CircleCfg extends FacetCfg<CircleData> {
   readonly title?: FacetTitle;
 }
 
-export interface CircleData extends FacetData {
-}
+export interface CircleData extends FacetData {}
 
 // ===================== tree 相关类型定义 =====================
 
 export interface Line {
-  readonly style?: ShapeAttrs,
+  readonly style?: ShapeAttrs;
   readonly smooth?: boolean;
 }
 /** tree 分面类型配置 */
@@ -1308,6 +1602,8 @@ export interface FacetCfgMap {
 
 // ============================ 主题样式表定义 ============================
 export interface StyleSheet {
+  /** 背景色 */
+  backgroundColor?: string;
   /** 主题色 */
   brandColor?: string;
   /** 分类色板 1，在数据量小于等于 10 时使用 */
@@ -1495,7 +1791,6 @@ export interface StyleSheet {
   tooltipTextLineHeight?: number;
   /** tooltip 文本字体粗细 */
   tooltipTextFontWeight?: number | string;
-
 
   // -------------------- Geometry labels --------------------
   /** Geometry label 文本颜色 */
@@ -1888,8 +2183,9 @@ export type Renderer = 'svg' | 'canvas';
 export type Datum = Record<string, any>;
 export type Data = Datum[];
 export type ActionCallback = (context: IInteractionContext) => void;
-export type Padding = number[];
+export type Padding = [number, number, number, number];
 export type ViewPadding = number | number[] | 'auto';
+export type ViewAppendPadding = number | number[];
 export type Position = [number, number];
 export type AttributeType = 'position' | 'size' | 'color' | 'shape';
 export type ShapeVertices = RangePoint[] | Point[] | Point[][];

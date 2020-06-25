@@ -69,15 +69,20 @@ describe('pie labels', () => {
       scales,
       container: canvas.addGroup(),
       labelsContainer: canvas.addGroup(),
-      theme: Theme,
       coordinate: coord,
     });
     pointGeom.position('x*y').label('label', { offset: -10 });
-    pointGeom.init();
+    pointGeom.init({
+      theme: Theme,
+    });
 
     const gLabels = new PieLabel(pointGeom);
 
     let items;
+
+    it('defaultLayout', () => {
+      expect(gLabels.defaultLayout).toBe('distribute');
+    });
 
     it('get items', () => {
       items = gLabels.getLabelItems(points);
@@ -164,7 +169,6 @@ describe('pie labels', () => {
       scales,
       container: canvas.addGroup(),
       labelsContainer: canvas.addGroup(),
-      theme: Theme,
       coordinate: coord,
     });
     pointGeom.position('x*y').label('label', {
@@ -173,32 +177,48 @@ describe('pie labels', () => {
       offsetY: -10,
       labelLine: false,
     });
-    pointGeom.init();
+    pointGeom.init({
+      theme: Theme,
+    });
 
     const gLabels = new PieLabel(pointGeom);
 
-    it('points', () => {
+    it('render', () => {
+      gLabels.render(points, false);
+
       const items = gLabels.getLabelItems(points);
-      expect(items.length).toBe(points.length);
-      const center = { x: 250, y: 100 };
-      const radius = 50 + 10/** offset */;
-      const angle = Math.PI * 2 / 6;
-      const startAngle = angle / 2;
-      expect(items[0].r).toBe(radius);
-      expect(items[0].x).toBe(center.x + Math.sin(startAngle) * radius + 10/** offsetX */);
-      expect(items[0].y).toBe(center.y - Math.cos(startAngle) * radius - 10/** offsetY */);
+
+      const labels = gLabels.labelsRenderer.container.getChildren();
+      expect(labels.length).toBe(points.length);
+
+      // @ts-ignore
+      const labelText0 = labels[0].find(ele => ele.get('type') === 'text');
+      expect(labelText0.attr('x')).toBe(items[0].x + 10);
+      expect(labelText0.attr('y')).toBe(items[0].y - 10);
+      // @ts-ignore
+      expect(labels[0].getCount()).toBe(1);
       expect(items[0].labelLine).toBe(false);
 
-      expect(items[1].x).toBe(center.x + Math.sin(startAngle + angle) * radius + 10);
-      expect(items[1].y).toBe(center.y - Math.cos(startAngle + angle) * radius - 10/** offsetY */);
+      // @ts-ignore
+      const labelText1 = labels[1].find(ele => ele.get('type') === 'text');
+      expect(labelText1.attr('x')).toBe(items[1].x + 10);
+      expect(labelText1.attr('y')).toBe(items[1].y - 10);
+      // @ts-ignore
+      expect(labels[1].getCount()).toBe(1);
       expect(items[1].labelLine).toBe(false);
 
-      expect(items[2].x).toBeCloseTo(center.x + Math.sin(startAngle + angle * 2) * radius + 10);
-      expect(items[2].y).toBe(center.y - Math.cos(startAngle + angle * 2) * radius - 10/** offsetY */);
+      // @ts-ignore
+      const labelText2 = labels[2].find(ele => ele.get('type') === 'text');
+      expect(labelText2.attr('x')).toBe(items[2].x + 10);
+      expect(labelText2.attr('y')).toBe(items[2].y - 10);
+      // @ts-ignore
+      expect(labels[2].getCount()).toBe(1);
       expect(items[2].labelLine).toBe(false);
 
-      expect(items[5].x).toBeCloseTo(center.x + Math.sin(startAngle + angle * 5) * radius + 10);
-      expect(items[5].y).toBeCloseTo(center.y - Math.cos(startAngle + angle * 5) * radius - 10/** offsetY */);
+      // @ts-ignore
+      const labelText5 = labels[5].find(ele => ele.get('type') === 'text');
+      expect(labelText5.attr('x')).toBe(items[5].x + 10);
+      expect(labelText5.attr('y')).toBe(items[5].y - 10);
     });
   });
 });

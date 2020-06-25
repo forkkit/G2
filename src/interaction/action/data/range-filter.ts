@@ -76,8 +76,8 @@ class RangeFilter extends Action {
     if (isMask(this.context)) {
       const maskShape = this.context.event.target;
       const bbox = maskShape.getCanvasBBox();
-      startPoint = {x: bbox.x, y: bbox.y};
-      currentPoint = {x: bbox.maxX, y: bbox.maxY};
+      startPoint = { x: bbox.x, y: bbox.y };
+      currentPoint = { x: bbox.maxX, y: bbox.maxY };
     } else {
       if (!this.isStarted) {
         // 如果没有开始，则不执行过滤
@@ -86,7 +86,7 @@ class RangeFilter extends Action {
       startPoint = this.startPoint;
       currentPoint = this.context.getCurrentPoint();
     }
-    if (distance(startPoint, currentPoint) < 5) {
+    if (Math.abs(startPoint.x - currentPoint.x) < 5 || Math.abs(startPoint.x - currentPoint.y) < 5) {
       // 距离过小也不生效
       return;
     }

@@ -3,6 +3,7 @@ import Action from '../../../src/interaction/action/base';
 import {
   createAction,
   createCallbackAction,
+  getActionClass,
   registerAction,
   unregisterAction,
 } from '../../../src/interaction/action/register';
@@ -28,6 +29,10 @@ class CustomAction extends Action {
 }
 registerAction('custom', CustomAction); // 注册
 describe('create action test', () => {
+  it('getActionClass', () => {
+    expect(getActionClass('custom')).toBe(CustomAction);
+    expect(getActionClass('test11')).toBe(undefined);
+  });
   it('create action', () => {
     const context = new Context(null);
     const action = createAction('custom', context);
@@ -276,7 +281,7 @@ describe('Interaction test', () => {
     });
   });
 
-  describe.only('once', () => {
+  describe('once', () => {
     it('single start', () => {
       const interaction = new Interaction(chart, {
         start: [{ trigger: 'mouseenter', action: 'custom:start', once: true }],
@@ -582,8 +587,144 @@ describe('Interaction test', () => {
       interaction.destroy();
     });
   });
+
+  describe('interaction debounce or throttle', () => {
+    it('no debounce, no throttle', () => {
+      let count = 0;
+      const interaction = new Interaction(chart, {
+        start: [{ trigger: 'mouseenter', action: () => {
+          count ++;
+        }}],
+      });
+      interaction.init();
+      const eventObject = {
+        x: 332,
+        y: 337,
+      };
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      expect(count).toBe(3);
+      interaction.destroy();
+    });
+    it('debounce, immediate = false', (done) => {
+      let count = 0;
+      const interaction = new Interaction(chart, {
+        start: [{ trigger: 'mouseenter', action: () => {
+          count ++;
+        }, debounce: {wait: 20}}],
+      });
+      interaction.init();
+      const eventObject = {
+        x: 332,
+        y: 337,
+      };
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      expect(count).toBe(0);
+      setTimeout(() => {
+        expect(count).toBe(1);
+        interaction.destroy();
+        done();
+      }, 25);
+    });
+    it('debounce, immediate = true', (done) => {
+      let count = 0;
+      const interaction = new Interaction(chart, {
+        start: [{ trigger: 'mouseenter', action: () => {
+          count ++;
+        }, debounce: {wait: 20, immediate: true}}],
+      });
+      interaction.init();
+      const eventObject = {
+        x: 332,
+        y: 337,
+      };
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      expect(count).toBe(1);
+      setTimeout(() => {
+        expect(count).toBe(1);
+        interaction.destroy();
+        done();
+      }, 25);
+    });
+
+    it('throttle', (done) => {
+      let count = 0;
+      const interaction = new Interaction(chart, {
+        start: [{ trigger: 'mouseenter', action: () => {
+          count ++;
+        }, throttle: {wait: 20}}],
+      });
+      interaction.init();
+      const eventObject = {
+        x: 332,
+        y: 337,
+      };
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      expect(count).toBe(1);
+      setTimeout(() => {
+        expect(count).toBe(2);
+        interaction.destroy();
+        done();
+      }, 25);
+    });
+
+    it('throttle trailing = false', (done) => {
+      let count = 0;
+      const interaction = new Interaction(chart, {
+        start: [{ trigger: 'mouseenter', action: () => {
+          count ++;
+        }, throttle: {wait: 20, trailing: false}}],
+      });
+      interaction.init();
+      const eventObject = {
+        x: 332,
+        y: 337,
+      };
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      expect(count).toBe(1);
+      setTimeout(() => {
+        expect(count).toBe(1);
+        interaction.destroy();
+        done();
+      }, 25);
+    });
+
+    it('throttle leading = false', (done) => {
+      let count = 0;
+      const interaction = new Interaction(chart, {
+        start: [{ trigger: 'mouseenter', action: () => {
+          count ++;
+        }, throttle: {wait: 20, leading: false}}],
+      });
+      interaction.init();
+      const eventObject = {
+        x: 332,
+        y: 337,
+      };
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      chart.emit('mouseenter', eventObject);
+      expect(count).toBe(0);
+      setTimeout(() => {
+        expect(count).toBe(1);
+        interaction.destroy();
+        done();
+      }, 25);
+    });
+  });
   afterAll(() => {
     unregisterAction('custom');
     chart.destroy();
   });
 });
+
+

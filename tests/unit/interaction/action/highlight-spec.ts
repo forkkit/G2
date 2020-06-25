@@ -242,6 +242,9 @@ describe('test highlight action', () => {
         x: bbox1.x - 5,
         y: bbox1.y - 5,
       };
+      expect(() => {
+        action.highlight(); // pre test
+      }).not.toThrow();
       action.start();
       context.event = {
         x: bbox1.maxX + 5,
@@ -378,6 +381,18 @@ describe('test hilightBy', () => {
     };
     highlight.highlight();
     expect(interval.getElementsBy(el => el.hasState('active')).length).toBe(2);
+
+    context.event = {
+      target: {
+        get: () => {
+          return interval.elements[0];
+        },
+      },
+    };
+    highlight.toggle();
+    expect(interval.getElementsBy(el => el.hasState('active')).length).toBe(2);
+    highlight.toggle();
+    expect(interval.getElementsBy(el => el.hasState('active')).length).toBe(0);
 
     highlight.clear();
     expect(interval.getElementsBy(el => el.hasState('active')).length).toBe(0);

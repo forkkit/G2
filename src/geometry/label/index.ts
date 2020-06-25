@@ -5,15 +5,22 @@ import { LabelItem } from './interface';
 
 /**
  * label 布局函数定义
+ * @param items 存储每个 label 的详细信息
  * @param labels 所有的 labels 图形实例
  * @param shapes 所有 label 对应的图形元素实例
  * @param region 画布区域
  * @param cfg 用于存储各个布局函数开放给用户的配置数据
  */
-type GeometryLabelsLayoutFn = (labels: IGroup[], shapes: IShape[] | IGroup[], items: LabelItem[], region: BBox, cfg?: LooseObject) => void;
+type GeometryLabelsLayoutFn = (
+  items: LabelItem[],
+  labels: IGroup[],
+  shapes: IShape[] | IGroup[],
+  region: BBox,
+  cfg?: LooseObject
+) => void;
 
 const GEOMETRY_LABELS_MAP: Record<string, GeometryLabelConstructor> = {};
-const GEOMETRY_LABELS_LAYOUT_MAP: Record<string, GeometryLabelsLayoutFn>  = {};
+const GEOMETRY_LABELS_LAYOUT_MAP: Record<string, GeometryLabelsLayoutFn> = {};
 
 /**
  * 获取 `type` 对应的 [[GeometryLabel]] 类

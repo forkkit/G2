@@ -66,7 +66,6 @@ describe('LabelsRenderer', () => {
         percent: createScale('percent', data),
         a: createScale('a', data),
       },
-      theme: Theme,
     });
     interval
       .position('1*percent')
@@ -76,13 +75,15 @@ describe('LabelsRenderer', () => {
       })
       .adjust('stack');
 
-    interval.init();
+    interval.init({
+      theme: Theme,
+    });
     interval.paint();
 
     it('render', () => {
       expect(interval.labelsContainer.getCount()).toBe(3);
       // @ts-ignore
-      const labelsRenderer = interval.labelsRenderer;
+      const labelsRenderer = interval.geometryLabel.labelsRenderer;
       expect(labelsRenderer.container.getCount()).toBe(3);
       // @ts-ignore
       expect(labelsRenderer.container.getFirst().getCount()).toBe(2);
@@ -113,10 +114,10 @@ describe('LabelsRenderer', () => {
       interval.paint();
 
       // @ts-ignore
-      const labelsRenderer = interval.labelsRenderer;
+      const labelsRenderer = interval.geometryLabel.labelsRenderer;
       expect(labelsRenderer.container.getCount()).toBe(2);
-      expect(labelsRenderer.container.getFirst().get('data')).toEqual({ a: '1', percent: 0.5 });
-      expect(labelsRenderer.container.getFirst().get('animateCfg').update).toBe(false);
+      expect(labelsRenderer.container.find(ele => ele.get('type') === 'text').get('data')).toEqual({ a: '1', percent: 0.5 });
+      expect(labelsRenderer.container.find(ele => ele.get('type') === 'text').get('animateCfg').update).toBe(false);
 
       interval.animate(false).update();
       interval.paint();
@@ -126,7 +127,7 @@ describe('LabelsRenderer', () => {
 
     it('clear', () => {
       // @ts-ignore
-      const labelsRenderer = interval.labelsRenderer;
+      const labelsRenderer = interval.geometryLabel.labelsRenderer;
       labelsRenderer.clear();
 
       expect(interval.labelsContainer.getCount()).toBe(0);
@@ -137,7 +138,7 @@ describe('LabelsRenderer', () => {
 
     it('destroy', () => {
       // @ts-ignore
-      const labelsRenderer = interval.labelsRenderer;
+      const labelsRenderer = interval.geometryLabel.labelsRenderer;
       labelsRenderer.destroy();
 
       expect(interval.labelsContainer.destroyed).toBe(true);
@@ -174,10 +175,11 @@ describe('LabelsRenderer', () => {
       container: canvas.addGroup(),
       labelsContainer: canvas.addGroup(),
       scales,
-      theme: Theme,
     });
     path.position('price*consumption').label('year');
-    path.init();
+    path.init({
+      theme: Theme,
+    });
     path.paint();
 
     it('render', () => {
@@ -259,8 +261,8 @@ describe('LabelsRenderer', () => {
 
     const labelsContainer = interval.labelsContainer;
     expect(labelsContainer.getCount()).toBe(2);
-    const femaleLabel = labelsContainer.getChildren()[1];
-    const maleLabel = labelsContainer.getChildren()[0];
+    const femaleLabel = labelsContainer.findById('1-女');
+    const maleLabel = labelsContainer.findById('1-男');
     // @ts-ignore
     expect(femaleLabel.getFirst().get('type')).toBe('text');
     // @ts-ignore

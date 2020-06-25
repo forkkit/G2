@@ -1,12 +1,14 @@
-import { find, get, map } from '@antv/util';
+import { isObject, each, get } from '@antv/util';
+
 import { BBox, IGroup, IShape } from '../../../dependents';
-import { polarToCartesian } from '../../../util/graphics';
 import { LabelItem } from '../interface';
+
+import { polarToCartesian } from '../../../util/graphics';
 
 /** label text和line距离 4px */
 const MARGIN = 4;
 
-function antiCollision(labelGroups: IGroup[], labels: LabelItem[], lineHeight, plotRange, center, isRight) {
+function antiCollision(labelShapes, labels, lineHeight, plotRange, center, isRight) {
   // adjust y position of labels to avoid overlapping
   let overlapping = true;
   const start = plotRange.start;
@@ -27,7 +29,6 @@ function antiCollision(labelGroups: IGroup[], labels: LabelItem[], lineHeight, p
     return {
       size: lineHeight,
       targets: [label.y - startY],
-      pos: null,
     };
   });
   minY -= startY;
@@ -77,6 +78,11 @@ function antiCollision(labelGroups: IGroup[], labels: LabelItem[], lineHeight, p
     });
   });
 
+  const labelsMap = {};
+  for (const labelShape of labelShapes) {
+    labelsMap[labelShape.get('id')] = labelShape;
+  }
+
   // (x - cx)^2 + (y - cy)^2 = totalR^2
   labels.forEach((label) => {
     const rPow2 = label.r * label.r;
@@ -93,49 +99,23 @@ function antiCollision(labelGroups: IGroup[], labels: LabelItem[], lineHeight, p
         label.x = center.x + dx;
       }
     }
-  });
 
-  labels.forEach((label) => {
-    const labelGroup = find(labelGroups, (group) => group.get('id') === label.id);
-    const coordinate = labelGroup.get('coordinate');
-    const coordRadius = coordinate.getRadius();
-    if (labelGroup) {
-      const labelShape = labelGroup.getChildren()[0];
-      const labelLineShape = labelGroup.getChildren()[1];
-      if (labelShape) {
-        labelShape.attr('x', label.x);
-        labelShape.attr('y', label.y);
-      }
-      if (labelLineShape) {
-        const distance = label.offset;
-        const angle = label.angle;
-        // 贴近圆周
-        const startPoint = polarToCartesian(center.x, center.y, angle, coordRadius);
-        const inner = polarToCartesian(center.x, center.y, angle, coordRadius + distance / 2);
-        const endPoint = {
-          x: label.x - Math.cos(angle) * MARGIN,
-          y: label.y - Math.sin(angle) * MARGIN,
-        };
-        labelLineShape.attr(
-          'path',
-          [`M ${startPoint.x}`, `${startPoint.y} Q${inner.x}`, `${inner.y} ${endPoint.x}`, endPoint.y].join(',')
-        );
-      }
-    }
+    // adjust labelShape
+    const labelShape = labelsMap[label.id];
+    labelShape.attr('x', label.x);
+    labelShape.attr('y', label.y);
   });
 }
 
-/**
- * pie outer-label: distribute algorithm
- */
-export function distribute(labels: IGroup[], shapes: IShape[] | IGroup[], items: LabelItem[], region: BBox) {
+export function distribute(items: LabelItem[], labels: IGroup[], shapes: IShape[] | IGroup[], region: BBox) {
   const offset = items[0] ? items[0].offset : 0;
-  const lineHeight = items[0] ? get(items[0], 'labelHeight') : 14;
-  const coordinate = labels[0] ? labels[0].get('coordinate') : null;
-  if (coordinate && offset > 0) {
-    // @ts-ignore
-    const radius = coordinate.getRadius();
-    const center = coordinate.getCenter();
+  const coordinate = labels[0].get('coordinate');
+  const radius = coordinate.getRadius();
+  const center = coordinate.getCenter();
+
+  if (offset > 0) {
+    // const lineHeight = get(this.geometry.theme, ['pieLabels', 'labelHeight'], 14);
+    const lineHeight = 14; // TODO
     const totalR = radius + offset;
     const totalHeight = totalR * 2 + lineHeight * 2;
     const plotRange = {
@@ -161,22 +141,14 @@ export function distribute(labels: IGroup[], shapes: IShape[] | IGroup[], items:
       }
     });
 
-    halves.forEach((half: LabelItem[], index) => {
+    halves.forEach((half, index) => {
       // step 2: reduce labels
-      const maxLabelsCountForOneSide = Math.floor(totalHeight / lineHeight);
+      const maxLabelsCountForOneSide = totalHeight / lineHeight;
       if (half.length > maxLabelsCountForOneSide) {
         half.sort((a, b) => {
           // sort by percentage DESC
           return b['..percent'] - a['..percent'];
         });
-        half.forEach((labelItem, idx) => {
-          if (idx >= maxLabelsCountForOneSide) {
-            const id = labelItem.id;
-            const label = find(labels, (label) => label.get('id') === id);
-            label.remove(true); // 超出则不展示
-          }
-        });
-        // 同时移除
         half.splice(maxLabelsCountForOneSide, half.length - maxLabelsCountForOneSide);
       }
 
@@ -185,11 +157,35 @@ export function distribute(labels: IGroup[], shapes: IShape[] | IGroup[], items:
         // sort by y ASC
         return a.y - b.y;
       });
-      const labelShapes = map(half, (labelItem) => {
-        const id = labelItem.id;
-        return find(labels, (label) => label.get('id') === id);
-      });
-      antiCollision(labelShapes, half, lineHeight, plotRange, center, index);
+
+      antiCollision(labels, half, lineHeight, plotRange, center, index);
     });
   }
+
+  // 配置 labelLine
+  each(items, (item) => {
+    if (item && item.labelLine) {
+      const distance = item.offset;
+      const angle = item.angle;
+      // 贴近圆周
+      const startPoint = polarToCartesian(center.x, center.y, radius, angle);
+      const innerPoint = polarToCartesian(center.x, center.y, radius + distance / 2, angle);
+      const itemX = item.x + get(item, 'offsetX', 0);
+      const itemY = item.y + get(item, 'offsetY', 0);
+      const endPoint = {
+        x: itemX - Math.cos(angle) * MARGIN,
+        y: itemY - Math.sin(angle) * MARGIN,
+      };
+      if (!isObject(item.labelLine)) {
+        // labelLine: true
+        item.labelLine = {};
+      }
+      item.labelLine.path = [
+        `M ${startPoint.x}`,
+        `${startPoint.y} Q${innerPoint.x}`,
+        `${innerPoint.y} ${endPoint.x}`,
+        endPoint.y,
+      ].join(',');
+    }
+  });
 }

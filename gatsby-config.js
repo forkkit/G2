@@ -1,4 +1,4 @@
-const { repository } = require('./package.json');
+const { repository, version } = require('./package.json');
 
 module.exports = {
   plugins: [
@@ -33,18 +33,10 @@ module.exports = {
       {
         slug: 'docs/manual',
         title: {
-          zh: '教程',
+          zh: '教程文档',
           en: 'Tutorials',
         },
         order: 1,
-      },
-      {
-        slug: 'docs/api/g2',
-        title: {
-          zh: 'API 文档',
-          en: 'API',
-        },
-        order: 2,
       },
     ],
     docs: [
@@ -57,20 +49,12 @@ module.exports = {
         order: 3,
       },
       {
-        slug: 'manual/dataset',
-        title: {
-          zh: 'DataSet',
-          en: 'DataSet',
-        },
-        order: 5,
-      },
-      {
         slug: 'manual/concepts',
         title: {
           zh: '核心概念',
           en: 'Main Concepts',
         },
-        order: 6,
+        order: 5,
       },
       {
         slug: 'manual/concepts/geometry',
@@ -78,13 +62,21 @@ module.exports = {
           zh: '几何标记与图表类型',
           en: 'Geometry and Charts',
         },
-        order: 6,
+        order: 5,
       },
       {
         slug: 'manual/developer',
         title: {
           zh: '开发者教程',
           en: 'For Developers',
+        },
+        order: 6,
+      },
+      {
+        slug: 'manual/dataset',
+        title: {
+          zh: 'DataSet',
+          en: 'DataSet',
         },
         order: 7,
       },
@@ -295,11 +287,11 @@ module.exports = {
           </head>
           <body>
             <div id="container" />
-            <!-- todo: url 更新 4.0.0 -->
-            <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g2-3.5.11/dist/g2.min.js"></script>
-            <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.10.2/dist/data-set.min.js"></script>
+            <script src="https://gw.alipayobjects.com/os/lib/antv/g2/${version}/dist/g2.min.js"></script>
+            <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.11.1/dist/data-set.js"></script>
             <script>
-        {{code}}
+            <!-- 浏览器引入，请使用全局命名空间 G2，如 new Chart() 改为 new G2.Chart，即可运行。 -->
+            {{code}}
             </script>
           </body>
         </html>`,

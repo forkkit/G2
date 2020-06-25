@@ -83,11 +83,19 @@ chart.interaction('tooltip', {
   - 字符串由 ’actionName:method‘ 组成
   - 列表时可以使用相同的 action ，也可以使用不同的 action ，例如: ['element-active:clear', 'element-active:active', 'mask:clear']
 
-除了 trigger 和 action 之外还有其他几个属性：
+除了 trigger 和 action 之外还有其他几个可选属性：
 
 - isEnable(context): 是否可以触发
 - callback(context): 触发后执行完所有 action 的方法后会调用回调函数
 - once: boolean， 是否在一个环节内仅能执行一次
+- debounce: 延迟执行，有两个参数：
+  - wait: 等待时间
+  - immediate: 是否马上执行
+- throttle 增加阈值，控制执行的频率
+  - wait: 等待时间
+  - leading: 是否马上执行
+  - trailing: 执行完毕后再执行一次
+    debounce 和 throttle 的机制参考：https://css-tricks.com/debouncing-throttling-explained-examples/
 
 ### context 交互的上下文
 
@@ -222,6 +230,39 @@ registerInteraction('active-region', {
 
 <img src="https://gw.alipayobjects.com/mdn/rms_f5c722/afts/img/A*aSJMTYFmTvUAAAAAAAAAAABkARQnAQ" style="width: 339px;">
 
+### view-zoom
+
+鼠标滚动时，图表内部缩放，由于 mousewheel 触发的非常频繁，所以需要增加 throttle
+
+```js
+function isWheelDown(event) {
+  event.gEvent.preventDefault();
+  return event.gEvent.originalEvent.deltaY > 0;
+}
+registerInteraction('view-zoom', {
+  start: [
+    {
+      trigger: 'plot:mousewheel',
+      isEnable(context) {
+        return isWheelDown(context.event);
+      },
+      action: 'scale-zoom:zoomOut',
+      throttle: { wait: 100, leading: true, trailing: false },
+    },
+    {
+      trigger: 'plot:mousewheel',
+      isEnable(context) {
+        return !isWheelDown(context.event);
+      },
+      action: 'scale-zoom:zoomIn',
+      throttle: { wait: 100, leading: true, trailing: false },
+    },
+  ],
+});
+```
+
+<img src="https://gw.alipayobjects.com/mdn/rms_f5c722/afts/img/A*EqXmQJENnpQAAAAAAAAAAABkARQnAQ" style="width: 339px"/>
+
 ### element-active
 
 鼠标移入图表元素（柱状图的柱子、点图的点等）时触发 active
@@ -259,7 +300,7 @@ registerInteraction('element-selected', {
 ```javascript
 // 点击选中，允许取消
 registerInteraction('element-single-selected', {
-  start: [{ trigger: 'element:click', action: 'element-single-seleted:toggle' }],
+  start: [{ trigger: 'element:click', action: 'element-single-selected:toggle' }],
 });
 ```
 
@@ -475,22 +516,19 @@ registerInteraction('brush', {
   ],
   start: [
     {
-      trigger: 'mousedown',
-      isEnable: isPointInView,
+      trigger: 'plot:mousedown',
       action: ['brush:start', 'rect-mask:start', 'rect-mask:show'],
     },
   ],
   processing: [
     {
-      trigger: 'mousemove',
-      isEnable: isPointInView,
+      trigger: 'plot:mousemove',
       action: ['rect-mask:resize'],
     },
   ],
   end: [
     {
-      trigger: 'mouseup',
-      isEnable: isPointInView,
+      trigger: 'plot:mouseup',
       action: ['brush:filter', 'brush:end', 'rect-mask:end', 'rect-mask:hide'],
     },
   ],
@@ -536,8 +574,7 @@ registerInteraction('brush-visible', {
   ],
   end: [
     {
-      trigger: 'mouseup',
-      isEnable: isPointInView,
+      trigger: 'plot:mouseup',
       action: ['rect-mask:end', 'rect-mask:hide', 'element-range-highlight:end', 'element-range-highlight:clear'],
     },
   ],
@@ -589,7 +626,35 @@ registerInteraction('brush-visible', {
 
 ## Chart/View 的 Action
 
-暂未实现
+Chart 和 View 上的 Action 用户控制视图的变化，目前支持的有：
+
+- view-move
+- scale-translate
+- scale-zoom
+
+### view-move
+
+用于移动 View 的位置，支持以下几个方法：
+
+- start() 开始移动
+- end() 结束移动
+- move() 移动
+- reset() 回滚，恢复初始位置
+
+### scale-translate
+
+通过改变 scale 的位移，改变整个视图的位置变化，可以实现图表内部绘制区域的变化
+
+- start() 开始移动
+- end() 结束移动
+- translate() 修改 scale 的值
+- reset() 回滚，恢复初始状态
+
+### scale-zoom
+
+- zoomIn() 缩小
+- zoomOut() 放大
+- reset() 恢复
 
 ## Element 的 Action
 
@@ -606,6 +671,8 @@ registerInteraction('brush-visible', {
 - element-range-highlight
 - element-filter
 - element-sibling-filter
+- element-sibling-highlight
+- element-link-by-color
 
 Element 的 Action 可以响应的触发源：
 
@@ -668,12 +735,40 @@ Element 的 Action 可以响应的触发源：
 - toggle() 设置/取消当前触发事件相关元素的 highlight
 - reset() 取消当前触发事件相关元素的 highlight
 
+### element-range-highlight
+
+用于设置和取消图表元素的 highlight ，允许框选 highlight 有以下方法：
+
+- start() 开始框选
+- end() 结束框选
+- highlight() 高亮框选内部的元素
+- clear() 清理框选的元素
+
+`注意`：如果事件由 mask 触发，则可以直接调用 highlight，而不需要 start 和 end
+
+### element-sibling-highlight
+
+图表元素高亮时，对应的其他 view 的图形也同时高亮，这个 Action 是从 element-range-highlight 扩展出来的，可以配合 element-range-highlight 一起使用：
+
+- highlight() 设置当前触发事件相关元素对应的其他 View 上的元素的 highlight
+- clear() 取消相关元素的 highlight
+
 ### element-filter
 
 图表元素的过滤，支持来自图例（分类和连续）、坐标轴文本的触发，有以下方法：
 
 - filter() 过滤
 - reset() 取消过滤
+
+### element-link-by-color
+
+用于连接相同颜色的图表元素，一般用于层叠柱状图，有以下方法：
+
+- link() 连接
+- unlink() 取消连接
+- clear() 清除所有连接
+
+<image src="https://gw.alipayobjects.com/mdn/rms_f5c722/afts/img/A*KqE9SpqUKpcAAAAAAAAAAABkARQnAQ" width="359"/>
 
 ## 数据操作的 Action
 
@@ -712,22 +807,19 @@ registerInteraction('element-brush', {
   ],
   start: [
     {
-      trigger: 'mousedown',
-      isEnable: isPointInView,
+      trigger: 'plot:mousedown',
       action: ['brush:start', 'rect-mask:start', 'rect-mask:show'],
     },
   ],
   processing: [
     {
-      trigger: 'mousemove',
-      isEnable: isPointInView,
+      trigger: 'plot:mousemove',
       action: ['rect-mask:resize'],
     },
   ],
   end: [
     {
-      trigger: 'mouseup',
-      isEnable: isPointInView,
+      trigger: 'plot:mouseup',
       action: ['brush:filter', 'brush:end', 'rect-mask:end', 'rect-mask:hide'],
     },
   ],
@@ -785,6 +877,11 @@ registerInteraction('element-brush', {
 - list-unchecked
 - list-selected
 
+为了用户使用方面我们还从 list-highlight 中扩展出两个 Action
+
+- legend-item-highlight
+- axis-label-highlight
+
 ### tooltip
 
 显示隐藏 tooltip 的 Action 提供了两个方法：
@@ -804,6 +901,24 @@ registerInteraction('element-brush', {
 ### list-highlight
 
 分类图例项和坐标轴文本高亮的 highlight , 有下面几个方法：
+
+- highlight() 设置 highlight
+- reset() 取消 highlight
+- toggle() 设置或者取消 highlight
+- clear() 取消所有的 highlight
+
+### legend-item-highlight
+
+是从 list-highlight 扩展出来的 Action，在 Element 上触发时仅高亮对应图例的选项，而不会影响坐标轴文本，同样有 4 个方法：
+
+- highlight() 设置 highlight
+- reset() 取消 highlight
+- toggle() 设置或者取消 highlight
+- clear() 取消所有的 highlight
+
+### axis-label-highlight
+
+是从 list-highlight 扩展出来的 Action，在 Element 上触发时仅高亮对应坐标轴文本，而不会影响图例项，同样有 4 个方法：
 
 - highlight() 设置 highlight
 - reset() 取消 highlight
@@ -830,13 +945,15 @@ registerInteraction('element-brush', {
 
 ## 辅助交互的 Action
 
-在交互过程中辅助出现的图形，目前仅实现了两种：
+在交互过程中辅助出现的图形，目前仅实现了几种常见的：
 
 - active-region
 - mask 遮罩层，内置了几种 mask
   - rect-mask
   - circle-mask
   - path-mask
+- button 按钮
+  - reset-button 恢复按钮
 
 ### active-region
 
@@ -865,7 +982,7 @@ registerInteraction('element-brush', {
 - hide() 隐藏遮罩层
 - end() 结束框选
 
-### circle-mask
+### path-mask
 
 在画布上进行框选，在多个点上形成 path，有以下方法
 
@@ -874,6 +991,13 @@ registerInteraction('element-brush', {
 - addPoint() 添加一个点
 - hide() 隐藏遮罩层
 - end() 结束框选
+
+### reset-button
+
+在画布右上角出现一个恢复按钮，按钮图形上有 name: 'reset-button'，仅有两个方法：
+
+- show() 显示
+- hide() 隐藏
 
 ## 更多
 

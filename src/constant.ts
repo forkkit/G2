@@ -95,7 +95,20 @@ export enum PLOT_EVENTS {
   // click 事件
   CLICK = 'plot:click',
   DBLCLICK = 'plot:dblclick',
-  CONTEXTMENU = 'plot:contextmenu'
+  CONTEXTMENU = 'plot:contextmenu',
+
+  LEAVE = 'plot:leave',
+  ENTER = 'plot:enter',
+}
+
+/**
+ * Element 图形交互状态
+ */
+export enum ELEMENT_STATE {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SELECTED = 'selected',
+  DEFAULT = 'default',
 }
 
 /** 参与分组的图形属性名 */
@@ -103,8 +116,8 @@ export const GROUP_ATTRS = ['color', 'shape', 'size'];
 /** 存储原始数据的字段名 */
 export const FIELD_ORIGIN = '_origin';
 /** 最小的图表宽度 */
-export const MIN_CHART_WIDTH = 100;
+export const MIN_CHART_WIDTH = 1;
 /** 最小的图表高度 */
-export const MIN_CHART_HEIGHT = 100;
+export const MIN_CHART_HEIGHT = 1;
 /** 辅助组件占图表的尺寸的最大比例：如图表上方的图例最多占图表高度的25% */
 export const COMPONENT_MAX_VIEW_PERCENTAGE = 0.25;

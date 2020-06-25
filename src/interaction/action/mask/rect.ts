@@ -7,27 +7,27 @@ import MaskBase from './base';
  * 矩形的辅助框 Action
  */
 class RectMask extends MaskBase {
-
+  protected shapeType = 'rect';
   protected getRegion(): Region {
     const points = this.points;
     return {
       start: head(points),
-      end: last(points)
+      end: last(points),
     };
   }
-
-  // 生成 mask 的路径
-  protected getMaskPath() {
-    const path = [];
-    const {start, end} = this.getRegion();
-    if (start) {
-      path.push(['M', start.x, start.y]);
-      path.push(['L', end.x, start.y]);
-      path.push(['L', end.x, end.y]);
-      path.push(['L', start.x, end.y]);
-      path.push(['Z']);
-    }
-    return path;
+  // 添加图形
+  protected getMaskAttrs() {
+    const { start, end } = this.getRegion();
+    const x = Math.min(start.x, end.x);
+    const y = Math.min(start.y, end.y);
+    const width = Math.abs(end.x - start.x);
+    const height = Math.abs(end.y - start.y);
+    return {
+      x,
+      y,
+      width,
+      height,
+    };
   }
 }
 

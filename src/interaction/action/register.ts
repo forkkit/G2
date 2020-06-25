@@ -1,6 +1,7 @@
 import { ActionCallback, IInteractionContext, LooseObject } from '../../interface';
 import Action from './base';
 import CallbackAction from './callback';
+import { get } from '@antv/util';
 
 /** Action 构造函数 */
 type ActionConstructor = new (context: IInteractionContext, cfg?: LooseObject) => Action;
@@ -30,6 +31,15 @@ export function createAction(actionName: string, context: IInteractionContext): 
     action.init();
   }
   return action;
+}
+
+/**
+ * 根据 action 的 name 获取定义的类
+ * @param actionName action 的 name
+ */
+export function getActionClass(actionName: string) {
+  const actionOption = ActionCache[actionName];
+  return get(actionOption, 'ActionClass');
 }
 
 /**

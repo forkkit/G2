@@ -175,7 +175,7 @@ export class BBox {
    * @param gap
    */
   public shrink(gap: Padding): BBox {
-    const [top, right, bottom, left] = parsePadding(gap);
+    const [top, right, bottom, left] = gap;
 
     return new BBox(this.x + left, this.y + top, this.width - left - right, this.height - top - bottom);
   }
@@ -185,7 +185,7 @@ export class BBox {
    * @param bbox
    * @returns [top, right, bottom, left]
    */
-  public exceed(bbox: BBox): number[] {
+  public exceed(bbox: BBox): Padding {
     return [
       Math.max(-this.minY + bbox.minY, 0),
       Math.max(this.maxX - bbox.maxX, 0),
@@ -218,3 +218,16 @@ export const getRegionBBox = (bbox: BBox, region: Region): BBox => {
     bbox.height * Math.abs(end.y - start.y)
   );
 };
+
+/**
+ * 将 bbox 转换成 points
+ * @param bbox
+ */
+export function toPoints(bbox: Partial<BBox>): any[] {
+  return [
+    [bbox.minX, bbox.minY],
+    [bbox.maxX, bbox.minY],
+    [bbox.maxX, bbox.maxY],
+    [bbox.minX, bbox.maxY],
+  ];
+}

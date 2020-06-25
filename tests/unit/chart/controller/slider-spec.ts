@@ -4,6 +4,7 @@ import { Chart } from '../../../../src/index';
 import { createDiv } from '../../../util/dom';
 import { delay } from '../../../util/delay';
 import { removeDom } from '../../../../src/util/dom';
+import { SliderFormatterType } from '../../../../src/chart/controller/slider';
 
 const Data = [
   { year: '1991', value: 3 },
@@ -84,6 +85,25 @@ describe('Slider', () => {
     expect(others[0].component).toBe(slider.component);
 
     expect(slider.component.get('height')).toBe(16);
+  });
+
+  it('changeData', () => {
+    chart.changeData(Data.slice(0, 3));
+    chart.render(true);
+
+    expect(slider.component.get('minText')).toBe('1991');
+    expect(slider.component.get('maxText')).toBe('1992');
+  });
+
+  it('formatter', () => {
+    chart.option('slider', {
+      formatter: ((v, datum, idx) => `${v}-${datum.value}-${idx}`) as SliderFormatterType,
+    });
+    chart.changeData(Data.slice(0, 3));
+    chart.render(true);
+
+    expect(slider.component.get('minText')).toBe(`1991-3-0`);
+    expect(slider.component.get('maxText')).toBe(`1992-4-1`);
   });
 
   afterAll(() => {

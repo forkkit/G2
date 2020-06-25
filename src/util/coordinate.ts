@@ -3,7 +3,6 @@ import { Point } from '../interface';
 import { getSectorPath } from './graphics';
 import { isBetween } from './helper';
 
-
 /**
  * @ignore
  * Gets x dimension length
@@ -76,7 +75,7 @@ export function isPointInCoordinate(coordinate: Coordinate, point: Point) {
  * @ignore
  * 获取点到圆心的连线与水平方向的夹角
  */
-export function getPointAngle(coordinate: Coordinate, point: Point): number {
+export function getAngleByPoint(coordinate: Coordinate, point: Point): number {
   const center = coordinate.getCenter();
   return Math.atan2(point.y - center.y, point.x - center.x);
 }
@@ -95,7 +94,6 @@ export function getCoordinateClipCfg(coordinate: Coordinate, margin: number = 0)
   if (coordinate.isPolar) {
     const { startAngle, endAngle } = coordinate;
     const center = coordinate.getCenter();
-    // @ts-ignore 需要 coordinate 基类上支持
     const radius = coordinate.getRadius();
 
     return {

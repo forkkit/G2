@@ -9,7 +9,7 @@ import { LabelItem } from '../interface';
  * @param labels
  * @param cfg
  */
-export function limitInCanvas(labels: IGroup[], shapes: IShape[] | IGroup[], items: LabelItem[], region: BBox) {
+export function limitInCanvas(items: LabelItem[], labels: IGroup[], shapes: IShape[] | IGroup[], region: BBox) {
   each(labels, (label: IGroup) => {
     const { minX: regionMinX, minY: regionMinY, maxX: regionMaxX, maxY: regionMaxY } = region;
     const { minX, minY, maxX, maxY, x, y, width, height } = label.getCanvasBBox();
@@ -18,9 +18,9 @@ export function limitInCanvas(labels: IGroup[], shapes: IShape[] | IGroup[], ite
     let finalY = y;
     if (minX < regionMinX || maxX < regionMinX) {
       // 超出左侧
-      finalX =regionMinX;
+      finalX = regionMinX;
     }
-    if (minY < regionMinY || maxY < regionMinY ) {
+    if (minY < regionMinY || maxY < regionMinY) {
       // 超出顶部
       finalY = regionMinY;
     }
